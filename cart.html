@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+    <head><title>Hertz-UTS</title></head>
+    <link rel="stylesheet" href="stylesheet.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        let cart_array, totalPrice = 0;
+        
+        //load all cars in cart
+        $(document).ready(function() {
+            cart_array = JSON.parse(window.sessionStorage.getItem("cart")); //retreive sessionStorage
+            $.each(cart_array, function(i, field) {
+                let car = 
+                `
+                <tr id="${field.id}">
+                    <td>
+                        <img style="width:180px;height:120px;" src=${field.img} alt="${field.brand} ${field.model}">
+                    </td>
+                    <td style="width:180px;">${field.brand}-${field.model}-${field.model_year}</td>
+                    <td>${field.price_per_day}</td>
+                    <td>
+                        <input id="item-${field.id}" type="number" min="0" value="0" style="text-align: center;" class="items"></input>
+                    </td>
+                    <td >
+                        <button class="button" id="btn" onclick="deleteCar(${field.id})">Delete</button>
+                    </td>
+                </tr>
+                `
+                $(".reserved-list").append(car);
+            });
+        });
+        
+        //Checkout button is clicked
+        function checkout() {
+            //if no car in cart
+            if (cart_array.length <= 0) {
+                alert("No car has been add to cart! Return to home page"); //alert message 
+                window.location.href="index.html"; //direct to homepage
+            } else {
+                //if has car in carts then check if rental days are valid and calculate the price
+                var price = 0;
+                let items = document.getElementsByClassName("items");
+                let rentalDayValid = validateDay(items); //validate the rental day
+                if (rentalDayValid == true) {
+                    console.log("price");
+                    price = calculatePrice(items); //calculate total price
+                    window.sessionStorage.setItem("price", price); //store total price
+                    window.location.href="checkout.html"; //go to checkout page
+                }  
+            }
+        }
+        
+        //Validate input of rental day
+        function validateDay(days) {
+            var state = false; 
+            $.each(days, function(i, item) {
+                if(item.value < 1 || item.value.length == 0) {
+                    alert("Rental Day must more or equal 1 day. Please try again!");
+                    state = false;
+                } else {
+                    state = true;
+                }
+            });
+            return state;
+        }
+
+        //Calculate  the price
+        function calculatePrice(price) {
+            let totalPrice = 0;
+            $.each(price, function(i, item) {
+                let id = item.id.split('-')[1];
+                let car = cart_array.find(car => car.id == id); 
+                
+                //calculate the total price
+                let days = parseInt(item.value);
+                let dailyPrice = parseInt(car.price_per_day);
+                totalPrice += days * dailyPrice;
+            });
+            return totalPrice;
+        }
+        
+        //Delete button is clicked
+        function deleteCar(id) {
+            cart_array = cart_array.filter(car => car.id != id);
+            window.sessionStorage.setItem("cart", JSON.stringify(cart_array)); //reset session
+            document.getElementById(`${id}`).remove(); //remove the car from cart
+        }
+        
+        //return to homepage
+        function back(){
+        	    window.location.href = "index.html";	
+        }
+        
+    </script>
+    
+    <body>
+        <header>
+            <div class="inner">
+                <div class="home">
+                    <a class="logo" href="index.html">Hertz-UTS</a>
+                </div>
+                <div align="center"><h2 style="color:white; justify-content: center;">Car Rental Centre</h2></div>
+                <div><button class="button reserve-button" onClick=checkout()>Checkout</button></div>
+            </div>
+        </header>
+        
+        <div class="container">
+            <h1 style="text-align: center;">Car Reservation</h1><br>
+                <table class="reserved-list">
+                    <th>Thumbnail</th>
+                    <th>Vehicle</th>
+                    <th>Price Per Day</th>
+                    <th>Rental Days</th>
+                    <th>Actions</th>
+                </table>
+        </div>
+        
+
+    </body>
+</html>
